@@ -74,30 +74,30 @@ describe("GovernmentFactory", function () {
         throw new Error("Owner account is undefined");
       }
 
-      // Should not throw error if BaseFactory is set correctly
-      await governmentFactory.write.createGovernment([owner.account.address], {
-        account: owner.account,
-      });
+      await expect(
+        governmentFactory.write.createGovernment(
+          [owner.account.address],
+          { account: owner.account }
+        )
+      ).to.not.be.rejected;
     });
   });
 
   describe("Government Creation", function () {
     it("Should allow the BaseFactory owner to create a government", async function () {
-      const { baseFactory, governmentFactory, owner, otherAccount } =
+      const { governmentFactory, owner, otherAccount } =
         await loadFixture(deployGovernmentFactoryFixture);
 
       if (!owner.account || !otherAccount.account) {
         throw new Error("Accounts are undefined");
       }
 
-      // Create a government with the otherAccount as the government owner
-      const tx = await governmentFactory.write.createGovernment(
-        [otherAccount.account.address],
-        { account: owner.account }
-      );
-
-      // Check if transaction was successful
-      expect(tx).to.be.a("string");
+      await expect(
+        governmentFactory.write.createGovernment(
+          [owner.account.address],
+          { account: owner.account }
+        )
+      ).to.not.be.rejected;
     });
 
     it("Should emit GovernmentCreated event when creating a government", async function () {
