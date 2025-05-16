@@ -8,10 +8,7 @@ import "./IGovernment.sol";
  * @title Government
  * @dev Implementation of the Government contract that manages citizen addresses
  */
-abstract contract Government is IGovernment, Ownable {
-    // Mapping to track registered citizens
-    mapping(address => bool) private _citizens;
-
+contract Government is IGovernment, Ownable {
     /**
      * @dev Constructor that sets the deployer as the owner
      * @param governmentOwner The address that will own this government

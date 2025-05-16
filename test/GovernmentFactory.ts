@@ -54,6 +54,24 @@ describe("GovernmentFactory", function () {
       ).to.be.rejectedWith(/ZeroAddressNotAllowed/);
     });
 
+    it("Should not allow deploying with non base factory account", async function () {
+      const [owner, otherAccount] = await hre.viem.getWalletClients();
+
+      // Deploy BaseFactory
+      const baseFactory = await hre.viem.deployContract("BaseFactory");
+
+      // Deploy GovernmentFactory with BaseFactory address
+      await expect(
+        hre.viem.deployContract(
+          "GovernmentFactory",
+          [baseFactory.address],
+          {
+            account: otherAccount.account,
+          }
+        )
+      ).to.be.rejectedWith(/NotAuthorized/);
+    });
+
     it("Should initialize with the correct BaseFactory address", async function () {
       const [owner] = await hre.viem.getWalletClients();
 
@@ -66,37 +84,26 @@ describe("GovernmentFactory", function () {
         [baseFactory.address]
       );
 
-      // We can't directly check BaseFactory reference since it's private
-      // Instead, we'll validate by creating a government and checking authorization
-      await baseFactory.write.registerFactory([governmentFactory.address]);
-
-      if (!owner.account) {
-        throw new Error("Owner account is undefined");
-      }
-
-      await expect(
-        governmentFactory.write.createGovernment(
-          [owner.account.address],
-          { account: owner.account }
-        )
-      ).to.not.be.rejected;
+      expect(
+        (await governmentFactory.read.baseFactory()).toLocaleLowerCase()
+      ).to.be.equal(baseFactory.address.toLocaleLowerCase());
     });
   });
 
   describe("Government Creation", function () {
     it("Should allow the BaseFactory owner to create a government", async function () {
-      const { governmentFactory, owner, otherAccount } =
-        await loadFixture(deployGovernmentFactoryFixture);
+      const { governmentFactory, owner, otherAccount } = await loadFixture(
+        deployGovernmentFactoryFixture
+      );
 
       if (!owner.account || !otherAccount.account) {
         throw new Error("Accounts are undefined");
       }
 
       await expect(
-        governmentFactory.write.createGovernment(
-          [owner.account.address],
-          { account: owner.account }
-        )
+        governmentFactory.write.createGovernment([owner.account.address], {
+          account: owner.account,
+        })
       ).to.not.be.rejected;
     });
 

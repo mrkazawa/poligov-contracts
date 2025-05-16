@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./IGovernmentFactory.sol";
-import "./ConcreteGovernment.sol";
+import "./Government.sol";
 import "./BaseFactory.sol";
 
 /**
@@ -12,20 +12,23 @@ import "./BaseFactory.sol";
  */
 contract GovernmentFactory is IGovernmentFactory {
     // Reference to the BaseFactory contract
-    BaseFactory private _baseFactory;
+    BaseFactory public baseFactory;
 
     // Mapping to track created governments
     mapping(address => bool) private _governments;
 
     /**
      * @dev Constructor that sets the BaseFactory reference
-     * @param baseFactory The address of the BaseFactory contract
+     * @param _baseFactory The address of the BaseFactory contract
      */
-    constructor(address baseFactory) {
-        if (baseFactory == address(0)) {
+    constructor(address _baseFactory) {
+        if (_baseFactory == address(0)) {
             revert ZeroAddressNotAllowed();
         }
-        _baseFactory = BaseFactory(baseFactory);
+        baseFactory = BaseFactory(_baseFactory);
+        if (msg.sender != baseFactory.owner()) {
+            revert NotAuthorized();
+        }
     }
 
     /**
@@ -38,15 +41,15 @@ contract GovernmentFactory is IGovernmentFactory {
         address governmentOwner
     ) external override returns (address) {
         // Check if the caller is the owner of BaseFactory
-        if (msg.sender != _baseFactory.owner()) {
+        if (msg.sender != baseFactory.owner()) {
             revert NotAuthorized();
         }
 
         // Check if government owner is valid
         if (governmentOwner == address(0)) {
             revert ZeroAddressNotAllowed();
-        } // Create a new ConcreteGovernment contract
-        ConcreteGovernment government = new ConcreteGovernment(governmentOwner);
+        }
+        Government government = new Government(governmentOwner);
 
         // Register the government in our mapping
         _governments[address(government)] = true;
